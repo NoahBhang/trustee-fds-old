@@ -1057,6 +1057,10 @@ def _debt_repayment_within_tolerance(tx, route_rule):
     보내 결측을 드러낸다. route_out 은 조용히 배제하는 통로이므로, 근거 없이
     통과시키지 않는다).
     """
+    verified = str(tx.get("payment_verified","")).strip().upper()
+    if verified != "Y":
+        return False
+
     paid = _num(tx.get("consideration_paid"))
     reduced = _num(tx.get("liability_reduction"))
     if paid is None or reduced is None or paid == 0:

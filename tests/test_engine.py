@@ -328,7 +328,7 @@ def test_former_spouse_after_divorce_dependency_no_is_not_related():
 # ------------------------------------------------ _debt_repayment_within_tolerance
 
 def test_debt_repayment_exactly_matching_is_within():
-    tx = {"consideration_paid": "100000000", "liability_reduction": "100000000"}
+    tx = {"consideration_paid": "100000000", "liability_reduction": "100000000", "payment_verified": "Y"}
     assert _debt_repayment_within_tolerance(tx, {"tolerance": 0.02}) is True
 
 
@@ -338,7 +338,7 @@ def test_debt_repayment_over_tolerance_is_false():
 
 
 def test_debt_repayment_just_inside_tolerance():
-    tx = {"consideration_paid": "100", "liability_reduction": "101"}   # 1% 차이
+    tx = {"consideration_paid": "100", "liability_reduction": "101", "payment_verified": "Y"}   # 1% 차이
     assert _debt_repayment_within_tolerance(tx, {"tolerance": 0.02}) is True
 
 
@@ -350,7 +350,7 @@ def test_debt_repayment_missing_data_does_not_route():
 
 
 def test_debt_repayment_requires_configured_tolerance():
-    tx = {"consideration_paid": "100", "liability_reduction": "100"}
+    tx = {"consideration_paid": "100", "liability_reduction": "100", "payment_verified": "Y"}
     try:
         _debt_repayment_within_tolerance(tx, {})
     except KeyError as exc:
