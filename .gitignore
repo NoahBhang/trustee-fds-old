@@ -27,3 +27,4 @@ env/
 # 주의: data/sample 의 CSV 는 이 프로젝트의 핵심 입력이므로 무시하지 않는다.
 #       실제 사건 자료를 넣게 되면 아래 주석을 해제하고 별도 경로로 분리할 것.
 # data/real/
+.ipynb_checkpoints/
