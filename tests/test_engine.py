@@ -535,3 +535,36 @@ def test_engine_refuses_to_run_with_critical_integrity_issue():
         assert "판정 실행 거부" in str(exc)
     else:
         raise AssertionError("CRITICAL 입력으로 엔진을 직접 호출해도 중단해야 한다")
+
+def test_unreferenced_party_distinguishes_same_id_across_cases():
+    """같은 party_id가 두 사건에 있고 한쪽만 거래에 쓰이면, 다른 쪽은 보고돼야 한다."""
+    ds = Dataset(
+        cases={},
+        parties={
+            ("CASE-001", "P-010"): {"case_id": "CASE-001", "party_id": "P-010",
+                                    "relation_type": "spouse"},
+            ("CASE-002", "P-010"): {"case_id": "CASE-002", "party_id": "P-010",
+                                    "relation_type": "spouse"},
+        },
+        links=[{"transaction_id": "T1", "party_id": "P-010",
+                "role": "legal_counterparty"}],
+        transactions=[{"transaction_id": "T1", "case_id": "CASE-001"}],
+    )
+    issues = ds._check_unreferenced_parties()
+    assert len(issues) == 1
+    assert issues[0].details == [{"case_id": "CASE-002", "party_id": "P-010",
+                                  "relation_type": "spouse"}]
+
+
+def test_unreferenced_party_skips_self():
+    """채무자 본인(self)은 거래에 없어도 고아로 보고하지 않는다."""
+    ds = Dataset(
+        cases={},
+        parties={
+            ("CASE-001", "D-001"): {"case_id": "CASE-001", "party_id": "D-001",
+                                    "relation_type": "self"},
+        },
+        links=[],
+        transactions=[],
+    )
+    assert ds._check_unreferenced_parties() == []

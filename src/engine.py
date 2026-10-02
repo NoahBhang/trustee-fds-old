@@ -578,16 +578,20 @@ class Dataset:
         드러낸다 (officer 픽스처 OFF-* 가 이 방식으로 방치됐던 이력이 있다).
         relation_type == self 는 규약상 상시 등재이므로 제외한다.
         """
-        referenced = {l["party_id"] for l in self.links}
-        referenced |= {(r.get("officer_of") or "").strip()
-                       for r in self.parties.values()} - {""}
+        tx_case = {t["transaction_id"]: t["case_id"] for t in self.transactions}
+        referenced = {(tx_case.get(l["transaction_id"]), l["party_id"])
+                      for l in self.links}
+        referenced |= {(cid, (r.get("officer_of") or "").strip())
+                       for (cid, _pid), r in self.parties.items()
+                       if (r.get("officer_of") or "").strip()}
 
         orphans = []
         for (case_id, party_id), row in self.parties.items():
-            if party_id in referenced:
+            if (case_id, party_id) in referenced:
                 continue
             if (row.get("relation_type") or "").strip() == "self":
                 continue
+
             orphans.append({"case_id": case_id, "party_id": party_id,
                             "relation_type": row.get("relation_type")})
 
