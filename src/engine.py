@@ -1080,11 +1080,15 @@ def economics(tx, rule):
     if tx.get("action_type") == "debt_repayment":
         paid = _num(tx.get("consideration_paid"))
         reduced = _num(tx.get("liability_reduction"))
-        if tx.get("payment_verified") != "Y" or paid is None or reduced is None:
+        verified = str(tx.get("payment_verified") or "").strip().upper()
+
+        if verified != "Y" or paid is None or reduced is None:
             return None, 0.0, None, ["debt_repayment_amount_unverified"]
-        excess = max(paid - reduced, 0.0)
-        ratio = 0.0 if excess else None
-        return excess, 0.0, ratio, ["debt_repayment_excess_isolated"]
+        if paid <= reduced:
+            # 지급액이 채무 감소액 이하 → 재산 감소 없음. 값이 있으므로 평가 가능(ratio 1.0)
+            return 0.0, 0.0, 1.0, ["debt_repayment_no_excess"]
+        excess = paid - reduced
+        return excess, 0.0, 0.0, ["debt_repayment_excess_isolated"]
 
     outs = [_num(tx.get("asset_fair_value")),
             _num(tx.get("liability_increase_value")),

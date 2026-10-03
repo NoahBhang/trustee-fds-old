@@ -568,3 +568,26 @@ def test_unreferenced_party_skips_self():
         transactions=[],
     )
     assert ds._check_unreferenced_parties() == []
+
+
+def test_economics_underpayment_has_no_gratuitous_value():
+    """미달 변제(지급 < 채무 감소)는 '평가 필요'가 아니라 무상성 없음(ratio 1.0)이다."""
+    tx = {"action_type": "debt_repayment", "payment_verified": "Y",
+          "consideration_paid": "80000000", "liability_reduction": "100000000"}
+    value_out, value_in, ratio, notes = economics(tx, {})
+    assert (value_out, value_in, ratio) == (0.0, 0.0, 1.0)
+    assert notes == ["debt_repayment_no_excess"]
+
+
+def test_economics_exact_repayment_has_no_gratuitous_value():
+    """지급액과 채무 감소액이 같아도 무상성 없음이다."""
+    tx = {"action_type": "debt_repayment", "payment_verified": "Y",
+          "consideration_paid": "100", "liability_reduction": "100"}
+    assert economics(tx, {})[:3] == (0.0, 0.0, 1.0)
+
+
+def test_economics_debt_repayment_normalizes_payment_verified():
+    """' y ' 같은 표기도 검증된 것으로 읽는다 (_debt_repayment_within_tolerance와 일관)."""
+    tx = {"action_type": "debt_repayment", "payment_verified": " y ",
+          "consideration_paid": "130", "liability_reduction": "100"}
+    assert economics(tx, {})[:3] == (30.0, 0.0, 0.0)
